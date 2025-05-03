@@ -108,16 +108,16 @@ export default function ChatWindow({ conversation, messages }: ChatWindowProps) 
 						{dateMessages.map((message) => (
 							<div
 								key={message._id.toString()}
-								className={`flex ${message.sender === MessageSender.USER ? 'justify-end' : 'justify-start'} mb-2`}>
+								className={`flex ${message.sender === MessageSender.SYSTEM ? 'justify-end' : 'justify-start'} mb-2`}>
 								<div
 									className={`max-w-[70%] rounded-lg px-3 py-2 ${
-										message.sender === MessageSender.USER ? 'bg-[#d9fdd3] rounded-tr-none' : 'bg-white rounded-tl-none'
+										message.sender === MessageSender.SYSTEM ? 'bg-[#d9fdd3] rounded-tr-none' : 'bg-white rounded-tl-none'
 									}`}>
 									<p className='text-sm'>{message.content}</p>
 									<div className='flex justify-end'>
 										<span className='text-xs text-gray-500'>
 											{formatTime(message.timestamp)}
-											{message.sender === MessageSender.USER && <span className='ml-1 text-[#53bdeb]'>✓✓</span>}
+											{message.sender === MessageSender.SYSTEM && <span className='ml-1 text-[#53bdeb]'>✓✓</span>}
 										</span>
 									</div>
 								</div>
