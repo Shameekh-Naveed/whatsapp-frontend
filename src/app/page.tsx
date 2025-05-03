@@ -1,103 +1,104 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect } from 'react';
+import ChatList from '@/components/chat-list';
+import ChatWindow from '@/components/chat-window';
+import { fetchConversations, fetchMessages, markConversationAsRead } from '@/lib/api';
+import type { IConversation, IMessage } from '@/lib/types';
+import { Loader2 } from 'lucide-react';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+	const [conversations, setConversations] = useState<IConversation[]>([]);
+	const [activeConversation, setActiveConversation] = useState<IConversation | null>(null);
+	const [messages, setMessages] = useState<IMessage[]>([]);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
+	const [showNoContacts, setShowNoContacts] = useState(true);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+	useEffect(() => {
+		const loadConversations = async () => {
+			try {
+				setLoading(true);
+				const data = await fetchConversations();
+				setConversations(data);
+				if (data.length > 0 && !activeConversation) {
+					setActiveConversation(data[0]);
+				}
+				setLoading(false);
+			} catch (err) {
+				setError('Failed to load conversations');
+				setLoading(false);
+				console.error('Error loading conversations:', err);
+			}
+		};
+
+		// Initial load
+		loadConversations();
+
+		// Set up polling every 2 minutes (120000 ms)
+		const pollingInterval = setInterval(() => {
+			loadConversations();
+		}, 120000);
+
+		// Clean up interval on component unmount
+		return () => clearInterval(pollingInterval);
+	}, []);
+
+	useEffect(() => {
+		const loadMessages = async () => {
+			if (!activeConversation) return;
+
+			try {
+				const data = await fetchMessages(activeConversation._id);
+				setMessages(data);
+				if (activeConversation) markConversationAsRead(activeConversation._id);
+			} catch (err) {
+				console.error('Error loading messages:', err);
+				setError('Failed to load messages');
+			}
+		};
+
+		loadMessages();
+
+		// Set up polling for messages every 2 minutes (120000 ms)
+		const messagesPollingInterval = setInterval(() => {
+			if (activeConversation) loadMessages();
+		}, 120000);
+
+		// Clean up interval on component unmount or when active conversation changes
+		return () => clearInterval(messagesPollingInterval);
+	}, [activeConversation]);
+
+	const handleConversationClick = async (conversation: IConversation) => {
+		setActiveConversation(conversation);
+	};
+
+	if (loading) {
+		return (
+			<div className='flex items-center justify-center h-screen'>
+				<Loader2 className='w-8 h-8 animate-spin text-gray-500' />
+			</div>
+		);
+	}
+
+	return (
+		<div className='flex h-screen bg-gray-100'>
+			<div className='w-full md:w-1/3 border-r border-gray-300 bg-white flex flex-col'>
+				<ChatList
+					conversations={conversations}
+					activeConversation={activeConversation}
+					onConversationClick={handleConversationClick}
+					showNoContacts={showNoContacts}
+					onCloseNoContacts={() => setShowNoContacts(false)}
+				/>
+			</div>
+			<div className='hidden md:block md:w-2/3 bg-[#e5ddd5]'>
+				{activeConversation ? (
+					<ChatWindow conversation={activeConversation} messages={messages} />
+				) : (
+					<div className='flex items-center justify-center h-full text-gray-500'>Select a conversation to start chatting</div>
+				)}
+			</div>
+		</div>
+	);
 }
