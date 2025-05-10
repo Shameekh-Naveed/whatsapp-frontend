@@ -41,14 +41,20 @@ export async function fetchMessages(conversationId: string): Promise<IMessage[]>
 }
 
 // Send a new message
-export async function sendMessage(conversationId: string, content: string): Promise<IMessage> {
+export async function sendMessage(phoneNumber: string, content: string): Promise<IMessage> {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/conversations/${conversationId}/messages`, {
+        const response = await fetch(`${API_BASE_URL}/api/messages/send-messages`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ content }),
+            body: JSON.stringify({
+                numbers: [
+                    phoneNumber
+                ],
+                template: "none",
+                message: content
+            }),
         });
 
         if (!response.ok) {

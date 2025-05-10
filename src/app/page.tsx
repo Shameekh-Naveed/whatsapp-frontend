@@ -35,10 +35,10 @@ export default function Home() {
 		// Initial load
 		loadConversations();
 
-		// Set up polling every 2 minutes (120000 ms)
+		// Set up polling every 1 minutes (60000 ms)
 		const pollingInterval = setInterval(() => {
 			loadConversations();
-		}, 120000);
+		}, 60000);
 
 		// Clean up interval on component unmount
 		return () => clearInterval(pollingInterval);
@@ -60,10 +60,10 @@ export default function Home() {
 
 		loadMessages();
 
-		// Set up polling for messages every 2 minutes (120000 ms)
+		// Set up polling for messages every 1 minutes (60000 ms)
 		const messagesPollingInterval = setInterval(() => {
 			if (activeConversation) loadMessages();
-		}, 120000);
+		}, 60000);
 
 		// Clean up interval on component unmount or when active conversation changes
 		return () => clearInterval(messagesPollingInterval);

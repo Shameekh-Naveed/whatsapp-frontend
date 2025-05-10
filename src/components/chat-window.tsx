@@ -17,7 +17,7 @@ export default function ChatWindow({ conversation, messages }: ChatWindowProps) 
 	const [newMessage, setNewMessage] = useState('');
 	const [sending, setSending] = useState(false);
 
-	const person = typeof conversation.person === 'object' ? conversation.person : { name: 'Unknown' };
+	const person = typeof conversation.person === 'object' ? conversation.person : { name: 'Unknown', phoneNumber: '923216267584' };
 
 	const formatTime = (date: Date) => {
 		const d = new Date(date);
@@ -45,7 +45,7 @@ export default function ChatWindow({ conversation, messages }: ChatWindowProps) 
 
 		try {
 			setSending(true);
-			await sendMessage(conversation._id, newMessage);
+			await sendMessage(person.phoneNumber, newMessage);
 			setNewMessage('');
 		} catch (error) {
 			console.error('Error sending message:', error);
